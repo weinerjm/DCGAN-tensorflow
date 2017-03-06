@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+import sys
 import time
 import math
 from glob import glob
@@ -148,6 +149,8 @@ class DCGAN(object):
       data_X, data_y = self.load_mnist()
     else:
       data = glob(os.path.join("./data", config.dataset, self.input_fname_pattern))
+      if len(data) == 0:
+          raise ValueError("No data files specified. Check the file pattern glob?")
     #np.random.shuffle(data)
 
     d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
@@ -293,11 +296,12 @@ class DCGAN(object):
                   self.y:sample_labels,
               }
             )
-            save_images(samples, [8, 8],
+            image_frame_dim = 8#int(math.ceil(self.batch_size**.5))
+            save_images(samples, [image_frame_dim, image_frame_dim],
                   './{}/train_{:02d}_{:04d}.png'.format(config.sample_dir, epoch, idx))
             print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
           else:
-            try:
+              #try:
               samples, d_loss, g_loss = self.sess.run(
                 [self.sampler, self.d_loss, self.g_loss],
                 feed_dict={
@@ -305,13 +309,16 @@ class DCGAN(object):
                     self.inputs: sample_inputs,
                 },
               )
-              save_images(samples, [8, 8],
+              image_frame_dim = int(math.ceil(self.sample_num**.5)) 
+              # was batch_size
+              save_images(samples, [image_frame_dim, image_frame_dim],
                     './{}/train_{:02d}_{:04d}.png'.format(config.sample_dir, epoch, idx))
               print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
-            except:
-              print("one pic error!...")
+            #except Exception as e:
+              #print("Error writing training image:")
+              #print(sys.exc_info())
 
-        if np.mod(counter, 500) == 2:
+        if np.mod(counter, 100) == 2:
           self.save(config.checkpoint_dir, counter)
 
   def discriminator(self, image, y=None, reuse=False):

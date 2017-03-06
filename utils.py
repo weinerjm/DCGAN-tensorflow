@@ -217,7 +217,7 @@ def visualize(sess, dcgan, config, option):
 
       image_set.append(sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample}))
       make_gif(image_set[-1], './samples/test_gif_%s.gif' % (idx))
-
+    # JMW
     new_image_set = [merge(np.array([images[idx] for images in image_set]), [10, 10]) \
-        for idx in range(64) + range(63, -1, -1)]
+        for idx in range(config.batch_size) + range(config.batch_size-1, -1, -1)] # config.batch_size was 64
     make_gif(new_image_set, './samples/test_gif_merged.gif', duration=8)
